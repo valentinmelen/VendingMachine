@@ -4,7 +4,8 @@ public class NotFullyPaidException extends RuntimeException {
     long remaining;
 
     public NotFullyPaidException(String message, long remaining) {
-        this.message = message;
+        super(message);
+       // this.message = message;
         this.remaining = remaining;
     }
 

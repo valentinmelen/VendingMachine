@@ -37,7 +37,7 @@ public class VendingMachineImpl implements VendingMachine {
         cashInventory.add(coin);
     }
 
-    private void updateCashInventory(List change) {
+    public void updateCashInventory(List<Coin> change) {
         for (Coin coin : change) {
             cashInventory.decrease(coin);
         }
@@ -51,7 +51,7 @@ public class VendingMachineImpl implements VendingMachine {
         }
     }
 
-    private List<Coin> getChange(long amount) {
+    public List<Coin> getChange(long amount) {
 
         // calculate the amount of money for change
 
@@ -83,62 +83,59 @@ public class VendingMachineImpl implements VendingMachine {
     }
 
     public boolean hasSufficientChangeForAmount(long amount) {
-        boolean hasChange = true;
         try {
             getChange(amount);
         } catch (NotSufficientChangeException e) {
             e.printStackTrace();
-            return hasChange = false;
+            return false;
         }
-        return hasChange;
+        return true;
     }
 
-    private boolean hasSufficientChange() {
+    public boolean hasSufficientChange() {
         return hasSufficientChangeForAmount(currentBalance - currentItem.getPrice());
     }
 
-    public Item collectItem() throws NotSufficientChangeException, NotFullyPaidException {
-        if (isFullyPaid()) {
-            if (hasSufficientChange()) {
-                itemInventory.decrease(currentItem);
-                return currentItem;
-            }
-            throw new NotSufficientChangeException("Not Sufficient change in Inventory!");
-        }
-        throw new NotFullyPaidException("Price not full paid, remaining :", currentItem.getPrice() - currentBalance);
+    private Item collectItem() throws NotFullyPaidException {
+        if (isFullyPaid() && hasSufficientChange()) {
+            itemInventory.decrease(currentItem);
+            return currentItem;
 
+        } else {
+            throw new NotFullyPaidException("Price not full paid, remaining :", currentItem.getPrice() - currentBalance);
+        }
     }
 
-    public List<Coin> collectChange() throws NotSufficientChangeException {
-        long amount= currentBalance - currentItem.getPrice();
-        if (amount != 0) {
-            List<Coin> collectChange = getChange(amount);
-            updateCashInventory(collectChange);
-            currentBalance = 0;
-            currentItem = null;
-            return collectChange;
-        }
-        throw new NotSufficientChangeException("Not Sufficient Change Inventory!");
+    private List<Coin> collectChange() throws NotSufficientChangeException {
+        long amount = currentBalance - currentItem.getPrice();
+
+        List<Coin> collectChange = getChange(amount);
+        updateCashInventory(collectChange);
+        currentBalance = 0;
+        currentItem = null;
+
+        return collectChange;
 
     }
-
-    public PurchaseAndCoins<Item, List<Coin>> collectItemAndChange() {
+    @Override
+    public PurchaseAndCoins<Item, List<Coin>> collectItemAndChange() throws NotSufficientChangeException, NotFullyPaidException {
         totalSales = totalSales + currentItem.getPrice();
+
         Item item = collectItem();
         List<Coin> list_of_coins = collectChange();
-        return new PurchaseAndCoins<Item, List<Coin>>(item, list_of_coins);
+
+        return new PurchaseAndCoins<>(item, list_of_coins);
 
     }
-
+    @Override
     public List<Coin> refund() throws NotSufficientChangeException {
-        if (currentBalance != 0) {
-            List<Coin> refund = getChange(currentBalance);
-            updateCashInventory(refund);
-            currentBalance = 0;
-            currentItem = null;
-            return refund();
-        }
-        throw new NotSufficientChangeException("Not Sufficient Change Exception in Refund");
+
+        List<Coin> refund = getChange(currentBalance);
+        updateCashInventory(refund);
+        currentBalance = 0;
+        currentItem = null;
+
+        return refund();
 
     }
 

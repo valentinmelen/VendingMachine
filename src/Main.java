@@ -7,9 +7,14 @@ public class Main {
 
         vm.printStats();
         vm.selectItemAndGetPrice(Item.MARS);
+
         vm.insertCoin(Coin.TEN);
         vm.insertCoin(Coin.TWENTY);
+
         vm.collectItemAndChange();
-        
+
+        vm.printStats();
+
+
     }
 }
